@@ -1,0 +1,22 @@
+{
+    "files.watcherExclude": {
+        "**/routeTree.gen.ts": true
+    },
+    "search.exclude": {
+        "**/routeTree.gen.ts": true
+    },
+    "files.readonlyInclude": {
+        "**/routeTree.gen.ts": true
+    },
+    "prettier.configPath": "prettier.config.js",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.sortImports": "always",
+        "source.organizeImports": "always",
+        "source.removeUnusedImports": "always",
+        "source.fixAll.eslint": "always"
+    }
+}
