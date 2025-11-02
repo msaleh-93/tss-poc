@@ -3,6 +3,7 @@ import { createClientOnlyFn, createIsomorphicFn } from "@tanstack/react-start";
 import { createStore, useStore } from "zustand";
 
 import { cachedGetter } from "~/utils";
+import { eventsSub } from "~/utils/events";
 
 const APP_THEMES = ["dark", "light"] as const,
     USER_THEMES = ["system", ...APP_THEMES] as const,
@@ -27,7 +28,7 @@ interface ThemeStore {
 
 const themeStore = createStore<ThemeStore>()((set, get) => {
     let initTheme = "system" as UserTheme,
-        controller: AbortController | undefined;
+        unsubscribe: (() => void) | undefined;
 
     function updateDOM() {
         const { userTheme, appTheme } = get(),
@@ -39,16 +40,11 @@ const themeStore = createStore<ThemeStore>()((set, get) => {
     }
 
     function trackSystemTheme() {
-        controller = new AbortController();
-        systemDarkTheme().addEventListener(
-            "change",
-            () => {
-                set({ appTheme: getSystemTheme() });
-                updateDOM();
-                // console.log("handleSystemThemeChange", get());
-            },
-            { signal: controller.signal },
-        );
+        unsubscribe = eventsSub(systemDarkTheme()).change(() => {
+            set({ appTheme: getSystemTheme() });
+            updateDOM();
+            // console.log("handleSystemThemeChange", get());
+        });
     }
 
     createIsomorphicFn().client(() => {
@@ -57,7 +53,7 @@ const themeStore = createStore<ThemeStore>()((set, get) => {
 
         if (initTheme === "system") trackSystemTheme();
 
-        window.addEventListener("storage", ({ key, newValue }) => {
+        eventsSub(window).storage(({ key, newValue }) => {
             if (key !== THEME_KEY) return;
             const theme = newValue as UserTheme;
             get().setUserTheme(USER_THEMES.includes(theme) ? theme : "system");
@@ -87,9 +83,9 @@ const themeStore = createStore<ThemeStore>()((set, get) => {
 
             if (userTheme === prevTheme) return;
 
-            controller?.abort();
+            unsubscribe?.();
             if (userTheme === "system") trackSystemTheme();
-            else controller = undefined;
+            else unsubscribe = undefined;
         },
     };
 });
